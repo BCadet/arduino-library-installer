@@ -8,7 +8,6 @@ import sys
 import shutil
 import gzip
 import zipfile
-from jinja2 import Template, Environment, FileSystemLoader, select_autoescape
 
 def gunzip_shutil(source_filepath, dest_filepath, block_size=65536):
     with gzip.open(source_filepath, 'rb') as s_file, \
@@ -72,20 +71,6 @@ class arduinoLibraryInstaller():
         os.rename(os.path.join(destinationPath, os.path.splitext(library['archiveFileName'])[0]), os.path.join(destinationPath, library['name']))
         print('[*] Done!')
 
-    def generateCMakeConfig(self, library, destinationPath):
-        if(not os.path.isdir(os.path.join(destinationPath, 'cmake'))):
-            os.makedirs(os.path.join(destinationPath, 'cmake'))
-        env = Environment(
-            loader=FileSystemLoader("."),
-            autoescape=select_autoescape()
-        )
-        t = env.get_template("library-config.cmake")
-        render = t.render(libraryName=library['name'])
-        with open(os.path.join(destinationPath, 'cmake', 'Find' + library['name'] + '.cmake'), "w") as cmakeConfigFile:
-            cmakeConfigFile.write(render)
-
-
-
 def arduino_library_installer():
     parser = argparse.ArgumentParser(description='installer for arduino librarys with dependencies')
     parser.add_argument('--library', type=str, help='the library to install')
@@ -101,8 +86,6 @@ def arduino_library_installer():
     lib = installer.find_library(args.library, args.library_version)
     installer.download(lib)
     installer.extractArchive(lib, args.lib_path)
-
-    installer.generateCMakeConfig(lib, args.lib_path)
 
     
 if __name__ == '__main__' :
