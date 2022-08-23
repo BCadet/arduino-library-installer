@@ -2,12 +2,11 @@ import json
 import requests
 import argparse
 import os
-import tarfile
-import platform
 import sys
 import shutil
 import gzip
 import zipfile
+from distutils.version import LooseVersion
 
 def gunzip_shutil(source_filepath, dest_filepath, block_size=65536):
     with gzip.open(source_filepath, 'rb') as s_file, \
@@ -32,14 +31,28 @@ class arduinoLibraryInstaller():
         with open(str(self.arduinoSdkPath + '/library_index.json.gz'), 'wb') as sdkJsonFile:
             sdkJsonFile.write(file)
         gunzip_shutil(self.arduinoSdkPath + '/library_index.json.gz', self.arduinoSdkPath + '/library_index.json')
-        with open(self.arduinoSdkPath + '/library_index.json', 'r') as sdkJsonFile:
+        with open(self.arduinoSdkPath + '/library_index.json', 'r', encoding='utf-8') as sdkJsonFile:
             self.library_index = json.loads(sdkJsonFile.read())
 
     def find_library(self, libraryName, libraryVersion):
-        detectedLibrary = list(filter(lambda x: x['name'] == libraryName and x['version'] == libraryVersion, self.library_index['libraries']))
-        if(len(detectedLibrary) != 1):
-            print('oops')
-        return detectedLibrary[0]
+        if libraryVersion == 'latest':
+            detectedLibrary = list(filter(lambda x: x['name'] == libraryName, self.library_index['libraries']))
+        else:
+            detectedLibrary = list(filter(lambda x: x['name'] == libraryName and x['version'] == libraryVersion, self.library_index['libraries']))
+        if(len(detectedLibrary) == 0):
+            print('Cannot find any library!')
+            exit(1)
+        elif(len(detectedLibrary) > 1): # find the latest version among the detectedLibrary
+            max_version = LooseVersion(detectedLibrary[0]['version'])
+            for i in range(len(detectedLibrary)):
+                if max_version < LooseVersion(detectedLibrary[i]['version']):
+                    max_version = LooseVersion(detectedLibrary[i]['version'])
+            for i in range(len(detectedLibrary)):
+                if max_version == LooseVersion(detectedLibrary[i]['version']):
+                    break
+            return detectedLibrary[i]
+        else: # len(detectedLibrary) == 1
+            return detectedLibrary[0]
 
     def download(self, library):
         url = library['url']
