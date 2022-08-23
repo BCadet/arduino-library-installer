@@ -27,7 +27,7 @@ class arduinoLibraryInstaller():
                 sdkJsonFile.write(file)
             gunzip_shutil(self.arduinoSdkPath + '/library_index.json.gz', self.arduinoSdkPath + '/library_index.json')
             os.remove(self.arduinoSdkPath + '/library_index.json.gz')
-        with open(self.arduinoSdkPath + '/library_index.json', 'r', encoding='utf-8') as sdkJsonFile:
+        with open(self.arduinoSdkPath + '/library_index.json', 'rb') as sdkJsonFile:
             self.library_index = json.loads(sdkJsonFile.read())
 
     def find_library(self, libraryName, libraryVersion):
@@ -75,7 +75,7 @@ class arduinoLibraryInstaller():
                     downloaded += len(data)
                     f.write(data)
                     done = int(50*downloaded/total)
-                    sys.stdout.write('\r[{}{}]'.format('█' * done, '.' * (50-done)))
+                    sys.stdout.write('\r[{}{}]'.format('=' * done, '.' * (50-done)))
                     sys.stdout.flush()
         sys.stdout.write('\n')
         print('[*] Done!')
