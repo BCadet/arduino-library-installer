@@ -32,6 +32,7 @@ class arduinoLibraryInstaller():
             with open(str(self.arduinoSdkPath + '/library_index.json.gz'), 'wb') as sdkJsonFile:
                 sdkJsonFile.write(file)
             gunzip_shutil(self.arduinoSdkPath + '/library_index.json.gz', self.arduinoSdkPath + '/library_index.json')
+            os.remove(self.arduinoSdkPath + '/library_index.json.gz')
         with open(self.arduinoSdkPath + '/library_index.json', 'r', encoding='utf-8') as sdkJsonFile:
             self.library_index = json.loads(sdkJsonFile.read())
 
@@ -86,19 +87,16 @@ class arduinoLibraryInstaller():
         print('[*] Done!')
 
     def extractArchive(self, library, destinationPath, forcely):
-        destination_path = os.path.join(destinationPath, library['name'])
+        destination_path = os.path.join(destinationPath, os.path.splitext(library['archiveFileName'])[0])
         if os.path.exists(destination_path) == True:
             if forcely == True:
                 shutil.rmtree(destination_path)
             else:
                 return
 
-        if(os.path.isdir(self.arduinoSdkPath + destinationPath + library['name'])):
-            shutil.rmtree(self.arduinoSdkPath + destinationPath + library['name'])
         print('[*] Extracting ' + library['archiveFileName'] + ' to ' + destinationPath)
         zipArchive = zipfile.ZipFile(self.arduinoSdkPath + self._download_path + library['archiveFileName'])
         zipArchive.extractall(destinationPath)
-        os.rename(os.path.join(destinationPath, os.path.splitext(library['archiveFileName'])[0]), destination_path)
         print('[*] Done!')
 
 def arduino_library_installer():
@@ -117,10 +115,9 @@ def arduino_library_installer():
     lib = installer.find_library(args.library, args.library_version)
     if lib != None:
         installer.download(lib, args.f)
-    else:
-        # TODO: use git to clone the latest code
+        installer.extractArchive(lib, args.lib_path, args.f)
+    else: # TODO: use git to clone the latest code
         pass
-    installer.extractArchive(lib, args.lib_path, args.f)
 
 if __name__ == '__main__' :
     arduino_library_installer()
