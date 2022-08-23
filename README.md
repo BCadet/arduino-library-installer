@@ -3,3 +3,4 @@ python .\arduino-library-installer.py --library 'AudioZero' --arduino-sdk C:\Use
 ```
 
 `--library-version` is optional. If you don't fill in this parameter, it will download the latest version of current library.
+`-f` is optional. If you add `-f`, it means the script will delete the exist files and download it again.

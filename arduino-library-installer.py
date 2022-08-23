@@ -27,10 +27,11 @@ class arduinoLibraryInstaller():
             os.makedirs(self.arduinoSdkPath + self._download_path)
 
     def get_library_index(self):
-        file = requests.get('https://downloads.arduino.cc/libraries/library_index.json.gz').content
-        with open(str(self.arduinoSdkPath + '/library_index.json.gz'), 'wb') as sdkJsonFile:
-            sdkJsonFile.write(file)
-        gunzip_shutil(self.arduinoSdkPath + '/library_index.json.gz', self.arduinoSdkPath + '/library_index.json')
+        if os.path.exists(self.arduinoSdkPath + '/library_index.json') == False:
+            file = requests.get('https://downloads.arduino.cc/libraries/library_index.json.gz').content
+            with open(str(self.arduinoSdkPath + '/library_index.json.gz'), 'wb') as sdkJsonFile:
+                sdkJsonFile.write(file)
+            gunzip_shutil(self.arduinoSdkPath + '/library_index.json.gz', self.arduinoSdkPath + '/library_index.json')
         with open(self.arduinoSdkPath + '/library_index.json', 'r', encoding='utf-8') as sdkJsonFile:
             self.library_index = json.loads(sdkJsonFile.read())
 
@@ -57,8 +58,14 @@ class arduinoLibraryInstaller():
         else: # len(detectedLibrary) == 1
             return detectedLibrary[0]
 
-    def download(self, library):
+    def download(self, library,forcely):
         url = library['url']
+        if os.path.exists(self.arduinoSdkPath + self._download_path + library['archiveFileName']) == True:
+            if forcely == True:
+                os.remove(self.arduinoSdkPath + self._download_path + library['archiveFileName'])
+            else:
+                return
+
         print('[*] Downloading ' + library['archiveFileName'])
         with open(self.arduinoSdkPath + self._download_path + library['archiveFileName'], 'wb') as f:
             response = requests.get(url, stream=True)
@@ -78,13 +85,20 @@ class arduinoLibraryInstaller():
         sys.stdout.write('\n')
         print('[*] Done!')
 
-    def extractArchive(self, library, destinationPath):
+    def extractArchive(self, library, destinationPath, forcely):
+        destination_path = os.path.join(destinationPath, library['name'])
+        if os.path.exists(destination_path) == True:
+            if forcely == True:
+                shutil.rmtree(destination_path)
+            else:
+                return
+
         if(os.path.isdir(self.arduinoSdkPath + destinationPath + library['name'])):
             shutil.rmtree(self.arduinoSdkPath + destinationPath + library['name'])
         print('[*] Extracting ' + library['archiveFileName'] + ' to ' + destinationPath)
         zipArchive = zipfile.ZipFile(self.arduinoSdkPath + self._download_path + library['archiveFileName'])
         zipArchive.extractall(destinationPath)
-        os.rename(os.path.join(destinationPath, os.path.splitext(library['archiveFileName'])[0]), os.path.join(destinationPath, library['name']))
+        os.rename(os.path.join(destinationPath, os.path.splitext(library['archiveFileName'])[0]), destination_path)
         print('[*] Done!')
 
 def arduino_library_installer():
@@ -93,6 +107,7 @@ def arduino_library_installer():
     parser.add_argument('--library-version', type=str, default='version-latest', help='the library version')
     parser.add_argument('--arduino-sdk', type=str, help='arduino sdk location')
     parser.add_argument('--lib-path', type=str, help='library output path')
+    parser.add_argument('-f', action='store_true', default=False, help='download the library forcely')
 
     args = parser.parse_args()
 
@@ -101,12 +116,11 @@ def arduino_library_installer():
 
     lib = installer.find_library(args.library, args.library_version)
     if lib != None:
-        installer.download(lib)
+        installer.download(lib, args.f)
     else:
         # TODO: use git to clone the latest code
         pass
-    installer.extractArchive(lib, args.lib_path)
+    installer.extractArchive(lib, args.lib_path, args.f)
 
-    
 if __name__ == '__main__' :
     arduino_library_installer()
