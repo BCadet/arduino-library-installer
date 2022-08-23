@@ -32,7 +32,7 @@ class arduinoLibraryInstaller():
         with open(str(self.arduinoSdkPath + '/library_index.json.gz'), 'wb') as sdkJsonFile:
             sdkJsonFile.write(file)
         gunzip_shutil(self.arduinoSdkPath + '/library_index.json.gz', self.arduinoSdkPath + '/library_index.json')
-        with open(self.arduinoSdkPath + '/library_index.json', 'r') as sdkJsonFile:
+        with open(self.arduinoSdkPath + '/library_index.json', 'r', encoding='utf-8') as sdkJsonFile:
             self.library_index = json.loads(sdkJsonFile.read())
 
     def find_library(self, libraryName, libraryVersion):
