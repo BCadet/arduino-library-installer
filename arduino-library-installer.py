@@ -13,11 +13,6 @@ def gunzip_shutil(source_filepath, dest_filepath, block_size=65536):
         shutil.copyfileobj(s_file, d_file, block_size)
 
 class arduinoLibraryInstaller():
-
-    library_index = ...
-    arduinoSdkPath = ''
-    sdk_json = ...
-
     _download_path = '/staging/libraries/'
 
     def __init__(self, arduinoSdk):
