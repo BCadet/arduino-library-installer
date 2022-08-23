@@ -36,9 +36,12 @@ class arduinoLibraryInstaller():
 
     def find_library(self, libraryName, libraryVersion):
         if libraryVersion == 'latest':
+            return None
+        elif libraryVersion == 'version-latest':
             detectedLibrary = list(filter(lambda x: x['name'] == libraryName, self.library_index['libraries']))
         else:
             detectedLibrary = list(filter(lambda x: x['name'] == libraryName and x['version'] == libraryVersion, self.library_index['libraries']))
+
         if(len(detectedLibrary) == 0):
             print('Cannot find any library!')
             exit(1)
@@ -87,7 +90,7 @@ class arduinoLibraryInstaller():
 def arduino_library_installer():
     parser = argparse.ArgumentParser(description='installer for arduino librarys with dependencies')
     parser.add_argument('--library', type=str, help='the library to install')
-    parser.add_argument('--library-version', type=str, default='latest', help='the library version')
+    parser.add_argument('--library-version', type=str, default='version-latest', help='the library version')
     parser.add_argument('--arduino-sdk', type=str, help='arduino sdk location')
     parser.add_argument('--lib-path', type=str, help='library output path')
 
@@ -97,7 +100,11 @@ def arduino_library_installer():
     installer.get_library_index()
 
     lib = installer.find_library(args.library, args.library_version)
-    installer.download(lib)
+    if lib != None:
+        installer.download(lib)
+    else:
+        # TODO: use git to clone the latest code
+        pass
     installer.extractArchive(lib, args.lib_path)
 
     
