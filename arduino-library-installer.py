@@ -1,6 +1,5 @@
 import json
 import requests
-import argparse
 import os
 import sys
 import shutil
@@ -59,7 +58,7 @@ class arduinoLibraryInstaller():
         else: # len(detectedLibrary) == 1
             return detectedLibrary[0]
 
-    def download(self, library,forcely):
+    def download(self, library,forcely=False):
         url = library['url']
         if os.path.exists(self.arduinoSdkPath + self._download_path + library['archiveFileName']) == True:
             if forcely == True:
@@ -86,7 +85,7 @@ class arduinoLibraryInstaller():
         sys.stdout.write('\n')
         print('[*] Done!')
 
-    def extractArchive(self, library, destinationPath, forcely):
+    def extractArchive(self, library, destinationPath, forcely=False):
         destination_path = os.path.join(destinationPath, os.path.splitext(library['archiveFileName'])[0])
         if os.path.exists(destination_path) == True:
             if forcely == True:
@@ -99,7 +98,12 @@ class arduinoLibraryInstaller():
         zipArchive.extractall(destinationPath)
         print('[*] Done!')
 
-def arduino_library_installer():
+    def download_latest_code(self, library, destinationPath, forcely=False):
+         # TODO: use git to clone the latest code
+        pass
+
+if __name__ == '__main__':
+    import argparse
     parser = argparse.ArgumentParser(description='installer for arduino librarys with dependencies')
     parser.add_argument('--library', type=str, help='the library to install')
     parser.add_argument('--library-version', type=str, default='version-latest', help='the library version')
@@ -116,8 +120,5 @@ def arduino_library_installer():
     if lib != None:
         installer.download(lib, args.f)
         installer.extractArchive(lib, args.lib_path, args.f)
-    else: # TODO: use git to clone the latest code
-        pass
-
-if __name__ == '__main__' :
-    arduino_library_installer()
+    else:
+        installer.download_latest_code(lib, args.lib_path, args.f)
