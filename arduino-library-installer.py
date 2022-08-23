@@ -2,8 +2,6 @@ import json
 import requests
 import argparse
 import os
-import tarfile
-import platform
 import sys
 import shutil
 import gzip
@@ -37,8 +35,9 @@ class arduinoLibraryInstaller():
 
     def find_library(self, libraryName, libraryVersion):
         detectedLibrary = list(filter(lambda x: x['name'] == libraryName and x['version'] == libraryVersion, self.library_index['libraries']))
-        if(len(detectedLibrary) != 1):
-            print('oops')
+        if(len(detectedLibrary) == 0):
+            print('Cannot find any library!')
+            exit()
         return detectedLibrary[0]
 
     def download(self, library):
