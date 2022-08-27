@@ -20,7 +20,13 @@ class arduinoLibraryInstaller():
         if(not os.path.isdir(self.arduinoSdkPath + self._download_path)):
             os.makedirs(self.arduinoSdkPath + self._download_path)
 
-    def get_library_index(self):
+    def get_library_index(self, forcely=False):
+        if forcely == True:
+            if os.path.exists(self.arduinoSdkPath + '/library_index.json') == True:
+                os.remove(self.arduinoSdkPath + '/library_index.json')
+            if os.path.exists(self.arduinoSdkPath + '/library_index.json.gz') == True:
+                os.remove(self.arduinoSdkPath + '/library_index.json.gz')
+
         if os.path.exists(self.arduinoSdkPath + '/library_index.json') == False:
             file = requests.get('https://downloads.arduino.cc/libraries/library_index.json.gz').content
             with open(str(self.arduinoSdkPath + '/library_index.json.gz'), 'wb') as sdkJsonFile:
@@ -30,7 +36,7 @@ class arduinoLibraryInstaller():
         with open(self.arduinoSdkPath + '/library_index.json', 'rb') as sdkJsonFile:
             self.library_index = json.loads(sdkJsonFile.read())
 
-    def find_library(self, libraryName, libraryVersion):
+    def __find_library(self, libraryName, libraryVersion):
         if libraryVersion == 'latest':
             return None
         elif libraryVersion == 'version-latest':
@@ -53,7 +59,7 @@ class arduinoLibraryInstaller():
         else: # len(detectedLibrary) == 1
             return detectedLibrary[0]
 
-    def download(self, library,forcely=False):
+    def __download(self, library, forcely):
         url = library['url']
         if os.path.exists(self.arduinoSdkPath + self._download_path + library['archiveFileName']) == True:
             if forcely == True:
@@ -80,7 +86,7 @@ class arduinoLibraryInstaller():
         sys.stdout.write('\n')
         print('[*] Done!')
 
-    def extractArchive(self, library, destinationPath, forcely=False):
+    def __extract_archive(self, library, destinationPath, forcely):
         destination_path = os.path.join(destinationPath, os.path.splitext(library['archiveFileName'])[0])
         if os.path.exists(destination_path) == True:
             if forcely == True:
@@ -93,9 +99,18 @@ class arduinoLibraryInstaller():
         zipArchive.extractall(destinationPath)
         print('[*] Done!')
 
-    def download_latest_code(self, library, destinationPath, forcely=False):
+    def __download_latest_code(self, library, destinationPath, forcely):
          # TODO: use git to clone the latest code
         pass
+
+    def install_arduino_library(self, library_name, library_version, library_install_path, force_install=False):
+        lib = self.__find_library(library_name, library_version)
+        if lib != None:
+            self.__download(lib, force_install)
+            self.__extract_archive(lib, library_install_path, force_install)
+        else:
+            self.__download_latest_code(lib, library_install_path, force_install)
+
 
 if __name__ == '__main__':
     import argparse
@@ -108,12 +123,9 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
+    # begin to install libraries
     installer = arduinoLibraryInstaller(args.arduino_sdk)
-    installer.get_library_index()
-
-    lib = installer.find_library(args.library, args.library_version)
-    if lib != None:
-        installer.download(lib, args.f)
-        installer.extractArchive(lib, args.lib_path, args.f)
-    else:
-        installer.download_latest_code(lib, args.lib_path, args.f)
+    # True means upgrade the index
+    installer.get_library_index(True)
+    # e.g. installer.install_arduino_library('Audio', '1.0.2', 'C:\\Users\\92036\\Desktop\\pkgs')
+    installer.install_arduino_library(args.library, args.library_version, args.lib_path, args.f)
