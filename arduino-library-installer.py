@@ -103,7 +103,7 @@ class arduinoLibraryInstaller():
          # TODO: use git to clone the latest code
         pass
 
-    def install_arduino_library(self, library_name, library_version, library_install_path, force_install=False):
+    def install_arduino_library(self, library_name, library_install_path, library_version='version-latest', force_install=False):
         lib = self.__find_library(library_name, library_version)
         if lib != None:
             self.__download(lib, force_install)
@@ -125,7 +125,10 @@ if __name__ == '__main__':
 
     # begin to install libraries
     installer = arduinoLibraryInstaller(args.arduino_sdk)
+
     # True means upgrade the index
     installer.get_library_index(True)
-    # e.g. installer.install_arduino_library('Audio', '1.0.2', 'C:\\Users\\92036\\Desktop\\pkgs')
-    installer.install_arduino_library(args.library, args.library_version, args.lib_path, args.f)
+
+    # e.g. installer.install_arduino_library('Audio', 'C:\\Users\\92036\\Desktop\\pkgs', '1.0.2', True)
+    # e.g. installer.install_arduino_library('Audio', 'C:\\Users\\92036\\Desktop\\pkgs')
+    installer.install_arduino_library(args.library, args.lib_path, args.library_version, args.f)
